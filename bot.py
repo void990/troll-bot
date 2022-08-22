@@ -6,6 +6,7 @@
 
 from logging import exception
 from pdb import Restart
+from re import M
 from pyrogram import Client, filters, enums
 from sessions import app
 import random
@@ -25,7 +26,7 @@ cfg.read('config.cfg')
 file = open(cfg.get('settings', 'dict'), 'r')
 text = file.read().split('\n')
 prefix = str(cfg.get('settings', 'prefix'))
-floodwork = True
+floodwork = False
 trolling = False
 file.close()
 chat_id = int(cfg.get('settings', 'chat_id'))
@@ -37,6 +38,8 @@ console.print(
 )
 
 console.print(f'[red bold]Chat id: [white bold]{chat_id}[red bold] Delay: [white bold]{delay}')
+
+app.set_parse_mode(enums.ParseMode.MARKDOWN)
 
 @app.on_message(filters.command('chat', prefix) & filters.me)
 async def chatid(client, message):
@@ -50,7 +53,7 @@ async def chatid(client, message):
 @app.on_message(filters.command('delay', prefix) & filters.me)
 async def cdelay(client, message): 
     delay = message.text.split(' ')[1]
-    await message.edit(f'Delay changed to <code>{delay}</code>!')
+    await message.edit(f'Delay changed to `{delay}`!')
     cfg.set('settings', 'delay', delay)
     with open('config.cfg', 'w') as configfile:
         cfg.write(configfile)
@@ -92,29 +95,34 @@ async def flood(client, message):
         
 @app.on_message(filters.command(["id"],prefix) & filters.me)
 async def user_id(client, message):
-    if message.reply_to_message:
-        user=await app.get_users(message.reply_to_message.from_user.id)
-        await message.edit(f"""|-<b>Username: @{user.username}\n|-Id: <code>{user.id}</code>
-        </b>""")
-    else:
+    if message.reply_to_message and message.reply_to_message.forward_from:
+        user=await app.get_users(message.reply_to_message.forward_from.id)
+        await message.edit(f"""{"" if not user.username else '|-**Username: @' + user.username + '**'}\n|-Id: `{user.id}`""")
+    elif len(message.command) >= 2:
         check = message.text.split(f'{prefix}id')[1]
         user = await app.get_users(check)
-        await message.edit(f"""|-<b>Username: @{user.username}\n|-Id: <code>{user.id}</code>
-        </b>""")
-    # console.log(f'User info: {user}')
+        await message.edit(f"""|-**Username: @{user.username}\n|-Id: `{user.id}`
+        **""")
+    elif not message.forward_from and message.reply_to_message:
+        user=await app.get_users(message.reply_to_message.from_user.id)
+        await message.edit(f"""|-**Username: @{user.username}\n|-Id: `{user.id}`
+        **""")
     
 @app.on_message(filters.command(["info"], prefix) & filters.me)
 async def handler(client, message):
-    if message.reply_to_message:
+    if message.reply_to_message and not message.reply_to_message.forward_from:
         user=await app.get_users(message.reply_to_message.from_user.id)
-        await message.edit(f"""<b>|=Username: <code>{user.username}</code>\n|-Name:<code> {user.first_name} {"" if not user.last_name else user.last_name}</code>\n|-ID: <code>{user.id}</code>\n|-Self: <code>{user.is_self}</code>\n|-Contact: <code>{user.is_contact}</code>\n|-Mutal contact: <code>{user.is_mutual_contact}</code>\n|-Deleted: <code>{user.is_deleted}</code>\n|-Bot: <code>{user.is_bot}</code>\n|-Verified: <code>{user.is_verified}</code>\n|-Restricted: <code>{user.is_restricted}</code>\n|-Scam: <code>{user.is_scam}</code>\n|-Fake: <code>{user.is_fake}</code>\n|-Premium: <code>{user.is_premium}</code>\n|-Phone Number: <code>{user.phone_number}</code>
-        </b>""")
-    else:
+        await message.edit(f"""**|=Username: `{user.username}`\n|-Name:` {user.first_name} {"" if not user.last_name else user.last_name}`\n|-ID: `{user.id}`\n|-Self: `{user.is_self}`\n|-Contact: `{user.is_contact}`\n|-Mutal contact: `{user.is_mutual_contact}`\n|-Deleted: `{user.is_deleted}`\n|-Bot: `{user.is_bot}`\n|-Verified: `{user.is_verified}`\n|-Restricted: `{user.is_restricted}`\n|-Scam: `{user.is_scam}`\n|-Fake: `{user.is_fake}`\n|-Premium: `{user.is_premium}`\n|-Phone Number: `{user.phone_number}`
+        **""")
+    elif len(message.command) >= 2:
         check = message.text.split(f'{prefix}info')[1]
         user = await app.get_users(check)
-        console.print(f'{check}')
-        await message.edit(f"""<b>|=Username: <code>{user.username}</code>\n|-Name:<code> {user.first_name} {"" if not user.last_name else user.last_name}</code>\n|-ID: <code>{user.id}</code>\n|-Self: <code>{user.is_self}</code>\n|-Contact: <code>{user.is_contact}</code>\n|-Mutal contact: <code>{user.is_mutual_contact}</code>\n|-Deleted: <code>{user.is_deleted}</code>\n|-Bot: <code>{user.is_bot}</code>\n|-Verified: <code>{user.is_verified}</code>\n|-Restricted: <code>{user.is_restricted}</code>\n|-Scam: <code>{user.is_scam}</code>\n|-Fake: <code>{user.is_fake}</code>\n|-Premium: <code>{user.is_premium}</code>\n|-Phone Number: <code>{user.phone_number}</code>
-        </b>""")
+        await message.edit(f"""**|=Username: `{user.username}`\n|-Name:` {user.first_name} {"" if not user.last_name else user.last_name}`\n|-ID: `{user.id}`\n|-Self: `{user.is_self}`\n|-Contact: `{user.is_contact}`\n|-Mutal contact: `{user.is_mutual_contact}`\n|-Deleted: `{user.is_deleted}`\n|-Bot: `{user.is_bot}`\n|-Verified: `{user.is_verified}`\n|-Restricted: `{user.is_restricted}`\n|-Scam: `{user.is_scam}`\n|-Fake: `{user.is_fake}`\n|-Premium: `{user.is_premium}`\n|-Phone Number: `{user.phone_number}`
+        **""")
+    elif message.reply_to_message and message.reply_to_message.forward_from:
+        user=await app.get_users(message.reply_to_message.forward_from.id)
+        await message.edit(f"""**|=Username: `{user.username}`\n|-Name:` {user.first_name} {"" if not user.last_name else user.last_name}`\n|-ID: `{user.id}`\n|-Self: `{user.is_self}`\n|-Contact: `{user.is_contact}`\n|-Mutal contact: `{user.is_mutual_contact}`\n|-Deleted: `{user.is_deleted}`\n|-Bot: `{user.is_bot}`\n|-Verified: `{user.is_verified}`\n|-Restricted: `{user.is_restricted}`\n|-Scam: `{user.is_scam}`\n|-Fake: `{user.is_fake}`\n|-Premium: `{user.is_premium}`\n|-Phone Number: `{user.phone_number}`
+        **""")
 
 @app.on_message(filters.command(["dict"], prefix) & filters.me)
 async def dict(client, message):
@@ -142,7 +150,7 @@ async def reply(client, message):
     all = lower + upper + num + symbols
     temp = random.sample(all, length)
     password = "".join(temp)
-    await message.edit(f'<spoiler>Password generated:</spoiler> {password}')
+    await message.edit(f'||Password generated:|| {password}')
     
 @app.on_message(filters.command(['prefix', 'p'], prefix) & filters.me)
 async def sprefix(client, message):
@@ -155,8 +163,21 @@ async def sprefix(client, message):
     await message.edit(f"Prefix set to {cfg.get('settings', 'prefix')}")
 @app.on_message(filters.command(['help', 'h'], prefix))
 async def help(client, message):
-    await message.edit(f'Help:\n|-{prefix}chat <chat_id> - Изменить чат для троллинга\n|-{prefix}delay - Изменить задержку между отправкой сообщений бота\n|-{prefix}troll - Включить/Отключить режим троллинга\n|-{prefix}flood - Включить/Отключить режим флуда\n|-{prefix}id <username> или в ответ на сообщение - Узнать id пользователя\n|-{prefix}info <username> или в ответ на сообщение - Узнать информацию о пользователе\n|-{prefix}dict - Изменить путь к словарю для флуда/тролинга\n|-{prefix}g или generate - Сгенерировать пароль\n|-{prefix}prefix <new prefix> - Изменить префикс\n|-{prefix}h или help - Помощь по командам')
- 
+    await message.edit(f'Help:\n|-{prefix}chat <chat_id> - Изменить чат для троллинга\n|-{prefix}delay - Изменить задержку между отправкой сообщений бота\n|-{prefix}troll - Включить/Отключить режим троллинга\n|-{prefix}flood - Включить/Отключить режим флуда\n|-{prefix}id <username> или в ответ на сообщение - Узнать id пользователя\n|-{prefix}info <username> или в ответ на сообщение - Узнать информацию о пользователе\n|-{prefix}dict - Изменить путь к словарю для флуда/тролинга\n|-{prefix}g или generate - Сгенерировать пароль\n|-{prefix}prefix <new prefix> - Изменить префикс\n|-{prefix}get - Получить номера телефонов пользователей из чата\n|-{prefix}h или help - Помощь по командам')
+    
+@app.on_message(filters.command('get', prefix) & filters.me)
+async def getinfo(client, message):
+    user = await app.get_me()
+    chat_id = message.chat.id
+    memberss = []
+    async for member in app.get_chat_members(chat_id):
+        allmembers = f'[{member.user.first_name}](tg://user?id={member.user.id}) phone: {"+"+str(member.user.phone_number)}\n'
+        await app.delete_messages(message.chat.id, message.id)
+        if member.user.phone_number:
+            memberss.append(allmembers)
+    memberss.remove(f'[{user.first_name}](tg://user?id={user.id}) phone: {"+"+str(user.phone_number)}\n')
+    await app.send_message(user.id, f'**{message.chat.title}:\n**'+"".join(memberss))
+
 @app.on_message()
 async def troll(client, message):
     chat = int(message.chat.id)

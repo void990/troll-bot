@@ -10,11 +10,15 @@ if not exists("./config.cfg"):
     cfg.add_section('session')
     cfg.set('session', 'api_id', ftext)
     fstext=console.input("[bold white]Type your api_hash: ")
+    dict = console.input("[bold white]Type path to dictionary:")
+    prefix = console.input("[bold white]Type prefix: ")
+    delay = console.input("[bold white]Type delay: ")
     cfg.set('session', 'api_hash', fstext)
     cfg.add_section('settings')
-    cfg.set('settings', 'dict', 'none')
-    cfg.set('settings', 'delay', '2')
-    cfg.set('settings', 'prefix', '/')
+    cfg.set('settings', 'dict', dict)
+    cfg.set('settings', 'delay', delay)
+    cfg.set('settings', 'chat_id', '0')
+    cfg.set('settings', 'prefix', prefix)
     with open('config.cfg', 'w') as configfile:
         cfg.write(configfile)
 
