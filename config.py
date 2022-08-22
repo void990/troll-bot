@@ -11,11 +11,10 @@ if not exists("./config.cfg"):
     cfg.set('session', 'api_id', ftext)
     fstext=console.input("[bold white]Type your api_hash: ")
     cfg.set('session', 'api_hash', fstext)
-    path=console.input("[bold white]Type path to dictionary: ")
     cfg.add_section('settings')
-    cfg.set('settings', 'dict', path)
-    delay=console.input("[bold red]DELAY: ")
-    cfg.set('settings', 'delay', delay)
+    cfg.set('settings', 'dict', 'none')
+    cfg.set('settings', 'delay', '2')
+    cfg.set('settings', 'prefix', '/')
     with open('config.cfg', 'w') as configfile:
         cfg.write(configfile)
 

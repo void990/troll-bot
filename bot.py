@@ -16,6 +16,7 @@ from rich.console import Console
 from asyncio import sleep
 from pyrogram.raw import functions
 from pyrogram.types import Message, User
+from subprocess import Popen, PIPE, TimeoutExpired
 
 console = Console()
 password = []
@@ -23,7 +24,7 @@ cfg = configparser.ConfigParser()
 cfg.read('config.cfg')
 file = open(cfg.get('settings', 'dict'), 'r')
 text = file.read().split('\n')
-prefix = cfg.get('settings', 'prefix')
+prefix = str(cfg.get('settings', 'prefix'))
 floodwork = True
 trolling = False
 file.close()
@@ -143,9 +144,18 @@ async def reply(client, message):
     password = "".join(temp)
     await message.edit(f'<spoiler>Password generated:</spoiler> {password}')
     
+@app.on_message(filters.command(['prefix', 'p'], prefix) & filters.me)
+async def sprefix(client, message):
+    global prefix
+    sprefix = message.text.split(' ')[1]
+    cfg.set('settings', 'prefix', sprefix)
+    with open('config.cfg', 'w') as configfile:
+        cfg.write(configfile)  
+    prefix = str(cfg.get('settings', 'prefix')) 
+    await message.edit(f"Prefix set to {cfg.get('settings', 'prefix')}")
 @app.on_message(filters.command(['help', 'h'], prefix))
 async def help(client, message):
-    await message.edit(f'Help:\n|-{prefix}chat <chat_id> - Изменить чат для троллинга\n|-{prefix}delay - Изменить задержку между отправкой сообщений бота\n|-{prefix}troll - Включить/Отключить режим троллинга\n|-{prefix}flood - Включить/Отключить режим флуда\n|-{prefix}id <username> или в ответ на сообщение - Узнать id пользователя\n|-{prefix}info <username> или в ответ на сообщение - Узнать информацию о пользователе\n|-{prefix}dict - Изменить путь к словарю для флуда/тролинга\n|-{prefix}g или generate - Сгенерировать пароль\n|-{prefix}h или help - Помощь по командам')
+    await message.edit(f'Help:\n|-{prefix}chat <chat_id> - Изменить чат для троллинга\n|-{prefix}delay - Изменить задержку между отправкой сообщений бота\n|-{prefix}troll - Включить/Отключить режим троллинга\n|-{prefix}flood - Включить/Отключить режим флуда\n|-{prefix}id <username> или в ответ на сообщение - Узнать id пользователя\n|-{prefix}info <username> или в ответ на сообщение - Узнать информацию о пользователе\n|-{prefix}dict - Изменить путь к словарю для флуда/тролинга\n|-{prefix}g или generate - Сгенерировать пароль\n|-{prefix}prefix <new prefix> - Изменить префикс\n|-{prefix}h или help - Помощь по командам')
  
 @app.on_message()
 async def troll(client, message):
