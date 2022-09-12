@@ -12,6 +12,7 @@ import random
 import string
 from os.path import exists
 import configparser
+import config
 from rich.console import Console
 from asyncio import sleep
 from pyrogram.raw import functions
